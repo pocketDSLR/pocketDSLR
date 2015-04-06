@@ -1,59 +1,43 @@
 package cs495.pocketdslr;
 
 import android.app.Activity;
+import android.app.FragmentManager;
 import android.hardware.camera2.CameraAccessException;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceView;
+import android.view.TextureView;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 
 
 public class CameraActivity extends Activity {
 
-    protected PocketDSLRContext pocketDSLRContext;
-    protected CameraSettingsView settingsView;
-    protected CameraPreview cameraPreview;
-
-    public CameraActivity() {
-        super();
-    }
+    TextureView cameraPreview;
+    PocketDSLRContext pocketDSLRContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
+
+        super.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        super.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
         setContentView(R.layout.activity_camera);
-        SurfaceView surfaceView = null;
-        try {
-            this.pocketDSLRContext = new PocketDSLRContext(this, savedInstanceState, surfaceView);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-        this.settingsView = new CameraSettingsView(this,this.pocketDSLRContext.getUser());
-        this.cameraPreview = new CameraPreview(this, this.pocketDSLRContext);
+
+        this.cameraPreview = (TextureView)this.findViewById(R.id.cameraPreview);
+        this.pocketDSLRContext = new PocketDSLRContext(this, savedInstanceState, this.cameraPreview);
     }
 
-    @Override
-    protected  void onStart() {
-
+    protected void onPause() {
+        super.onPause();
+        this.pocketDSLRContext.getCamera().close();
     }
 
-    @Override
-    protected void onResume() {
 
-    }
-
-    @Override
-    protected  void onPause() {
-
-    }
-
-    @Override
-    protected  void onStop() {
-
-    }
-
-    @Override
-    protected void onDestroy() {
-
-    }
 }

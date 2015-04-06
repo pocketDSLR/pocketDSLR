@@ -15,30 +15,14 @@ public class CameraCaptureSessionCallbackBridge extends CameraCaptureSession.Sta
     }
 
     @Override
-    public void onReady(CameraCaptureSession session) {
-        super.onReady(session);
-        this.callback.onReady(session);
-    }
-
-    @Override
-    public void onActive(CameraCaptureSession session) {
-        super.onActive(session);
-        this.callback.onActive(session);
-    }
-
-    @Override
-    public void onClosed(CameraCaptureSession session) {
-        super.onClosed(session);
-        this.callback.onClosed(session);
-    }
-
-    @Override
     public void onConfigured(CameraCaptureSession session) {
+
         this.callback.onConfigured(session);
     }
 
     @Override
     public void onConfigureFailed(CameraCaptureSession session) {
+
         this.callback.onConfigureFailed(session);
     }
 }

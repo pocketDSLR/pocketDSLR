@@ -1,163 +1,74 @@
 package cs495.pocketdslr;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCaptureSession;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CaptureFailure;
-import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.CaptureResult;
-import android.hardware.camera2.DngCreator;
-import android.hardware.camera2.TotalCaptureResult;
-import android.media.Image;
-import android.media.ImageReader;
-import android.view.MotionEvent;
-import android.view.Surface;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import android.graphics.SurfaceTexture;
+import android.opengl.Matrix;
+import android.util.AttributeSet;
+import android.view.TextureView;
 
 /**
  * Created by Chris on 3/11/2015.
  */
-public final class CameraPreview extends SurfaceView implements SurfaceHolder.Callback, CameraCaptureRequestCallback{
+public class CameraPreview extends TextureView {
 
-    protected PocketDSLRContext pocketDSLRContext;
+    private int widthRatio;
+    private int heightRatio;
 
-    public CameraPreview(Context context, PocketDSLRContext pocketDSLRContext) {
-        super(context);
+    public CameraPreview(Context context) {
+        super(context, null);
+
+        this.initialize();
+    }
+
+    public CameraPreview(Context context, AttributeSet attrs) {
+        super(context, attrs, 0);
+
+        this.initialize();
+    }
+
+    public CameraPreview(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+
+        this.initialize();
+    }
+
+    public CameraPreview(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
+
+        this.initialize();
+    }
+
+    private void initialize() {
+        this.widthRatio = 0;
+        this.heightRatio = 0;
+    }
+
+    public void adjustAspectRatio(int width, int height) {
+        this.heightRatio = height;
+        this.widthRatio = width;
+        super.requestLayout();
     }
 
     @Override
-    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-    }
+        int widthSize = MeasureSpec.getSize(widthMeasureSpec);
+        int heightSize = MeasureSpec.getSize(heightMeasureSpec);
 
-    @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-
-        boolean result = super.onTouchEvent(event);
-
-        CameraCaptureSessionCallback sessionCallback;
-
-        int action = event.getAction();
-
-        try {
-            this.handleCameraCapture();
-        } catch (CameraAccessException e) {
-        } catch (IOException e) {
+        if (this.widthRatio == 0 || this.heightRatio == 0) {
+            //super.setMeasuredDimension(widthSize, heightSize);
+            super.setMeasuredDimension(1440, 1080);
         }
-
-        return result;
-    }
-
-    protected void handleCameraCapture() throws CameraAccessException, IOException {
-
-        ImageReader imageReader = null;
-
-        Surface surface = imageReader.getSurface();
-
-        CameraCaptureSession captureSession = null;
-
-        ManualCameraSettings settings = this.pocketDSLRContext.getUser().getCameraSettings();
-
-        this.pocketDSLRContext.getCamera().requestCapture(surface, settings, captureSession, this);
-
-        boolean captureSuccess = true;
-
-        CaptureRequest captureRequest = null;
-        TotalCaptureResult captureResult = null;
-        CaptureFailure failure = null;
-
-        if (captureSuccess){
-            this.onCaptureCompleted(captureSession, captureRequest, captureResult);
+        else if (widthSize < (double)heightSize * this.widthRatio / (double)this.heightRatio) {
+            //super.setMeasuredDimension(widthSize, widthSize * this.heightRatio / this.widthRatio);
+            super.setMeasuredDimension(1440, 1080);
+            //super.setMeasuredDimension(widthSize * this.heightRatio / this.widthRatio, widthSize);
         }
         else {
-            this.onCaptureFailed(captureSession, captureRequest, failure);
+            //super.setMeasuredDimension(heightSize * this.widthRatio / this.heightRatio, heightSize);
+            super.setMeasuredDimension(1440, 1080);
         }
-    }
-
-    protected void onViewImage(String name) {
-
-        Activity cameraActivity = null;
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(cameraActivity);
-// Add the buttons
-        builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // User clicked OK button
-            }
-        });
-        builder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // User cancelled the dialog
-            }
-        });
-
-        AlertDialog dialog = builder.create();
-
-        boolean viewImageInGallery = true;
-
-        if (viewImageInGallery) {
-            this.pocketDSLRContext.getUser().viewImage(name);
-        }
-    }
-
-    @Override
-    public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) throws IOException {
-        CameraCharacteristics cameraCharacteristics = this.pocketDSLRContext.getCamera().getCameraCharacteristics();
-        DngCreator dngCreator = new DngCreator(cameraCharacteristics, result);
-        OutputStream imageStream = null;
-        Image image = null;
-        dngCreator.writeImage(imageStream, image);
-        String imageName = "";
-        this.pocketDSLRContext.getUser().saveImage(image, imageName);
-    }
-
-    @Override
-    public void onCaptureFailed(CameraCaptureSession session, CaptureRequest request, CaptureFailure failure) {
-
-    }
-
-    @Override
-    public void onCaptureProgressed(CameraCaptureSession session, CaptureRequest request, CaptureResult partialResult) {
-
-    }
-
-    @Override
-    public void onCaptureSequenceAborted(CameraCaptureSession session, int sequenceId) {
-
-    }
-
-    @Override
-    public void onCaptureSequenceCompleted(CameraCaptureSession session, int sequenceId, long frameNumber) {
-
-    }
-
-    @Override
-    public void onCaptureStarted(CameraCaptureSession session, CaptureRequest request, long timestamp, long frameNumber) {
-
     }
 }
