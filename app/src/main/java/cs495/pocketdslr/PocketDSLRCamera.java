@@ -6,6 +6,7 @@ import android.content.res.Resources;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.GradientDrawable;
@@ -126,6 +127,12 @@ public class PocketDSLRCamera implements CameraStateCallback, CameraCaptureSessi
     protected void setupCameraPreview() {
 
         try {
+//            Matrix transform = this.cameraPreview.getTransform(null);
+//
+//            transform.setRotate(90);
+//
+//            this.cameraPreview.setTransform(transform);
+
             SurfaceTexture surfaceTexture = this.cameraPreview.getSurfaceTexture();
 
             surfaceTexture.setDefaultBufferSize(this.cameraSize.getWidth(), this.cameraSize.getHeight());
@@ -156,11 +163,10 @@ public class PocketDSLRCamera implements CameraStateCallback, CameraCaptureSessi
             this.cameraCharacteristics = this.cameraManager.getCameraCharacteristics(this.cameraId);
             StreamConfigurationMap config = this.cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             this.cameraSize = config.getOutputSizes(SurfaceTexture.class)[0];
-            int orientation = Resources.getSystem().getConfiguration().orientation;
 
-//            if (orientation == 2) { //Landscape
-//                this.cameraSize = new Size(this.cameraSize.getHeight(), this.cameraSize.getWidth());
-//            }
+            //this.applyTransform(this.cameraSize.getWidth(), this.cameraSize.getHeight());
+
+
 
             CameraStateCallbackBridge cameraStateCallbackBridge = new CameraStateCallbackBridge(this);
 
@@ -185,45 +191,40 @@ public class PocketDSLRCamera implements CameraStateCallback, CameraCaptureSessi
         return null;
     }
 
-    private void applyTransform(int width, int height) {
+    private void applyTransform() {
 
         if (this.cameraPreview == null || this.cameraSize == null) {
             return;
         }
 
+        RectF viewRect = new RectF(0, 0, this.cameraPreview.getWidth(), this.cameraPreview.getHeight());
+        RectF bufferRect = new RectF(0, 0, this.cameraSize.getWidth(), this.cameraSize.getHeight());
+
+        bufferRect.offset(viewRect.centerX() - bufferRect.centerX(), viewRect.centerY() - bufferRect.centerY());
+
         Matrix transformMatrix = new Matrix();
+
+        transformMatrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.CENTER);
 
         int surfaceOrientation = this.activity.getWindowManager().getDefaultDisplay().getRotation();
 
-        if (surfaceOrientation == Surface.ROTATION_270 || surfaceOrientation == Surface.ROTATION_90) {
-
-            RectF sourceBounds = new RectF(0, 0, this.cameraSize.getWidth(), this.cameraSize.getHeight());
-            RectF destinationBounds = new RectF(0, 0, width, height);
-
-            PointF sourceCenter = new PointF(sourceBounds.centerX(), sourceBounds.centerY());
-            PointF destinationCenter = new PointF(destinationBounds.centerX(), destinationBounds.centerY());
-
-            sourceBounds.offset(destinationCenter.x - sourceCenter.x, destinationCenter.y - sourceCenter.y);
-
-            transformMatrix.setRectToRect(destinationBounds, sourceBounds, Matrix.ScaleToFit.FILL);
-
-            float scalarConstant = Math.max(height / sourceBounds.height(), width / sourceBounds.width());
-
-            transformMatrix.postScale(scalarConstant, scalarConstant, destinationCenter.x, destinationCenter.y);
-            transformMatrix.postRotate((surfaceOrientation - 2) * 90, destinationCenter.x, destinationCenter.y);
-        }
+        transformMatrix.postRotate(surfaceOrientation * 90, viewRect.centerX(), viewRect.centerY());
 
         this.cameraPreview.setTransform(transformMatrix);
     }
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+
         this.openCamera();
+        //this.applyTransform();
     }
 
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+
         this.openCamera();
+        //this.applyTransform();
     }
 
     @Override

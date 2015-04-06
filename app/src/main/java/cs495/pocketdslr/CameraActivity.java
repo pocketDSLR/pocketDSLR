@@ -2,6 +2,7 @@ package cs495.pocketdslr;
 
 import android.app.Activity;
 import android.app.FragmentManager;
+import android.content.res.Configuration;
 import android.hardware.camera2.CameraAccessException;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -39,5 +40,12 @@ public class CameraActivity extends Activity {
         this.pocketDSLRContext.getCamera().close();
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+
+        if (newConfig.orientation != Configuration.ORIENTATION_PORTRAIT) {
+            super.onConfigurationChanged(newConfig);
+        }
+    }
 
 }
