@@ -9,4 +9,9 @@
         <attr name="metaButtonBarButtonStyle" format="reference" />
     </declare-styleable>
 
+    <declare-styleable name="pocketDSLR">
+        <attr name="orientation" format="integer"/>
+    </declare-styleable>
+
+
 </resources>
