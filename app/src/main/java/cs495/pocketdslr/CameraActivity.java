@@ -23,7 +23,6 @@ public class CameraActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
 
         super.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -32,7 +31,7 @@ public class CameraActivity extends Activity {
         setContentView(R.layout.activity_camera);
 
         this.cameraPreview = (TextureView)this.findViewById(R.id.cameraPreview);
-        this.pocketDSLRContext = new PocketDSLRContext(this, savedInstanceState, this.cameraPreview);
+        this.pocketDSLRContext = new PocketDSLRContext(this, this.cameraPreview);
     }
 
     protected void onPause() {

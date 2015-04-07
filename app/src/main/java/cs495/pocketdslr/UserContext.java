@@ -1,7 +1,9 @@
 package cs495.pocketdslr;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
@@ -14,15 +16,17 @@ import java.io.FileWriter;
  */
 public class UserContext {
 
-    protected Bundle bundle;
     protected Context context;
     protected ManualCameraSettings cameraSettings;
 
-    public UserContext(Context context, Bundle bundle) {
-        this.cameraSettings = new ManualCameraSettings(bundle);
+    public UserContext(Activity activity) {
+
+        this.context = activity;
+        this.cameraSettings = new ManualCameraSettings(activity.getPreferences(Activity.MODE_PRIVATE));
     }
 
     public ManualCameraSettings getCameraSettings() {
+
         return this.cameraSettings;
     }
 

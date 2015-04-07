@@ -19,11 +19,14 @@ import java.util.List;
 public class PocketDSLRContext implements PocketDSLRCameraCallback {
 
     private PocketDSLRCamera camera;
+    private CameraSettingsManager cameraSettingsManager;
     private UserContext user;
 
-    public PocketDSLRContext(Activity activity, Bundle bundle, TextureView cameraPreview) {
+    public PocketDSLRContext(Activity activity, TextureView cameraPreview) {
+
         this.camera = new PocketDSLRCamera(activity, this, cameraPreview);
-        this.user = new UserContext(activity, bundle);
+        this.user = new UserContext(activity);
+        this.cameraSettingsManager = new CameraSettingsManager(activity, this.user.getCameraSettings());
 
         cameraPreview.setSurfaceTextureListener(this.camera);
     }

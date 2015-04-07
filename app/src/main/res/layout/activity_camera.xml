@@ -20,17 +20,18 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/seekBar"
-        android:layout_below="@+id/imageButton3"
+        android:layout_below="@+id/buttonChevronLeft"
         android:layout_marginLeft="9dp"
-        android:layout_above="@+id/imageButton2" />
+        android:layout_above="@+id/buttonChevronRight" />
 
-    <cs495.pocketdslr.RotatableButton
+    <cs495.pocketdslr.CameraSettingButton
         style="?android:attr/buttonStyleSmall"
         android:layout_width="90dp"
         android:layout_height="100dp"
         android:text="ISO 10000"
         android:id="@+id/buttonISO"
         pocketDSLR:orientation="90"
+        pocketDSLR:setting="ISO"
         android:textSize="15dp"
         android:background="@android:color/transparent"
         android:textColor="#8CD0CA"
@@ -38,50 +39,52 @@
         android:layout_alignParentEnd="true"
         android:indeterminate="false" />
 
-    <cs495.pocketdslr.RotatableButton
+    <cs495.pocketdslr.CameraSettingButton
         style="?android:attr/buttonStyleSmall"
         android:layout_width="90dp"
         android:layout_height="100dp"
         android:text="f 16"
-        android:id="@+id/button"
+        android:id="@+id/buttonApertureSize"
         pocketDSLR:orientation="90"
+        pocketDSLR:setting="APERTURE_SIZE"
         android:textSize="15dp"
         android:background="@android:color/transparent"
         android:textColor="#8CD0CA"
         android:layout_alignParentBottom="true"
         android:layout_toStartOf="@+id/buttonISO" />
 
-    <cs495.pocketdslr.RotatableButton
+    <cs495.pocketdslr.CameraSettingButton
         style="?android:attr/buttonStyleSmall"
         android:layout_width="90dp"
         android:layout_height="100dp"
         android:text="1/125 sec"
-        android:id="@+id/buttonShutter"
+        android:id="@+id/buttonExposureTime"
         pocketDSLR:orientation="90"
+        pocketDSLR:setting="EXPOSURE_TIME"
         android:textSize="15dp"
         android:background="@android:color/transparent"
         android:textColor="#8CD0CA"
         android:layout_alignParentBottom="true"
-        android:layout_toStartOf="@+id/button" />
+        android:layout_toStartOf="@+id/buttonApertureSize" />
 
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/imageButton"
+        android:id="@+id/buttonCamera"
         android:clickable="false"
         android:src="@drawable/camera"
         android:background="@android:color/transparent"
         android:layout_alignParentBottom="true"
-        android:layout_alignStart="@+id/imageButton2"
-        android:layout_alignTop="@+id/buttonShutter" />
+        android:layout_alignStart="@+id/buttonChevronRight"
+        android:layout_alignTop="@+id/buttonExposureTime" />
 
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/imageButton2"
+        android:id="@+id/buttonChevronRight"
         android:src="@drawable/chevron_thin_down"
         android:background="@android:color/transparent"
-        android:layout_above="@+id/imageButton"
+        android:layout_above="@+id/buttonCamera"
         android:layout_alignStart="@+id/seekBar"
         android:layout_marginBottom="46dp"
         android:layout_alignEnd="@+id/seekBar" />
@@ -89,7 +92,7 @@
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/imageButton3"
+        android:id="@+id/buttonChevronLeft"
         android:src="@drawable/chevron_thin_up"
         android:background="@android:color/transparent"
         android:layout_alignParentTop="true"

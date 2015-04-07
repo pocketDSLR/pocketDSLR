@@ -11,6 +11,7 @@
 
     <declare-styleable name="pocketDSLR">
         <attr name="orientation" format="integer"/>
+        <attr name="setting" format="string" />
     </declare-styleable>
 
 

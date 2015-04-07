@@ -1,5 +1,6 @@
 package cs495.pocketdslr;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Surface;
 
@@ -11,77 +12,76 @@ import java.util.WeakHashMap;
  */
 public class ManualCameraSettings {
 
-    public static final String SHUTTER_SPEED = "1";
-    public static final String ISO = "2";
-    public static final String WHITE_BALANCE = "3";
-    public static final String IMAGE_QUALITY = "4";
-    public static final String APERATURE_SIZE = "5";
+    public static final String SHUTTER_SPEED = "SHUTTER_SPEED";
+    public static final String ISO = "ISO";
+    public static final String WHITE_BALANCE = "WHITE_BALANCE";
+    public static final String IMAGE_QUALITY = "IMAGE_QUALITY";
+    public static final String APERTURE_SIZE = "APERTURE_SIZE";
+    public static final String EXPOSURE_TIME = "EXPOSURE_TIME";
 
-    public final String[] SETTING_KEYS = new String[5];
+    protected SharedPreferences sharedPreferences;
+    protected SharedPreferences.Editor editor;
 
-    protected int shutterSpeed;
-    protected int iso;
-    protected int whiteBalance;
-    protected int imageQuality;
-    protected int aperatureSize;
+    public ManualCameraSettings(SharedPreferences sharedPreferences){
+        this.sharedPreferences = sharedPreferences;
+        this.editor = this.sharedPreferences.edit();
+    }
 
-    protected Bundle savedInstance;
+    public void setKey(String settingKey, int value) {
+        this.editor.putInt(settingKey, value);
+        this.editor.commit();
+    }
 
-    public ManualCameraSettings(Bundle savedInstance){
-
+    public int getKey(String settingKey) {
+        return this.sharedPreferences.getInt(settingKey, 0);
     }
 
     public void setShutterSpeed(int shutterSpeed) {
-        this.savedInstance.putInt(SHUTTER_SPEED, shutterSpeed);
+        this.setKey(SHUTTER_SPEED, shutterSpeed);
     }
 
     public int getShutterSpeed() {
-        int setting = this.savedInstance.getInt(SHUTTER_SPEED);
-        return setting;
+        return this.getKey(SHUTTER_SPEED);
     }
 
     public void setISO(int iso) {
-        this.savedInstance.putInt(ISO, iso);
+        this.setKey(ISO, iso);
     }
 
     public int getISO() {
-        int setting =  this.savedInstance.getInt(ISO);
-        return setting;
+        return this.getKey(ISO);
     }
 
-    public void setAperature(int aperatureSize) {
-        this.savedInstance.putInt(APERATURE_SIZE, aperatureSize);
+    public void setAperture(int apertureSize) {
+        this.setKey(APERTURE_SIZE, apertureSize);
     }
 
-    public int getAperature() {
-        int setting = this.savedInstance.getInt(APERATURE_SIZE);
-        return setting;
+    public int getAperture() {
+        return this.getKey(APERTURE_SIZE);
     }
 
     public void setWhiteBalance(int whiteBalance) {
-        this.savedInstance.putInt(WHITE_BALANCE, whiteBalance);
+        this.setKey(WHITE_BALANCE, whiteBalance);
     }
 
     public int getWhiteBalance(){
-        int setting = this.savedInstance.getInt(WHITE_BALANCE);
-        return setting;
+        return this.getKey(WHITE_BALANCE);
     }
 
     public void setImageQuality(int imageQuality) {
-        this.savedInstance.putInt(IMAGE_QUALITY, imageQuality);
+        this.setKey(IMAGE_QUALITY, imageQuality);
     }
 
     public int getImageQuality(){
-        int setting = this.savedInstance.getInt(IMAGE_QUALITY);
-        return setting;
+        return this.getKey(IMAGE_QUALITY);
     }
 
-    public Boolean hasCapabilities() {
-        return false;
+    public void setExposureTime(int exposureTime){
+        this.setKey(EXPOSURE_TIME, exposureTime);
     }
 
-    public void requestCapture(Surface renderSurface) {
-
+    public int getExposureTime(){
+        return this.getKey(EXPOSURE_TIME);
     }
 
 }
