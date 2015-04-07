@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.Image;
+import android.media.ImageReader;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -14,7 +15,7 @@ import java.io.FileWriter;
 /**
  * Created by Chris on 3/11/2015.
  */
-public class UserContext {
+public class UserContext implements ImageReader.OnImageAvailableListener {
 
     protected Context context;
     protected ManualCameraSettings cameraSettings;
@@ -40,4 +41,8 @@ public class UserContext {
         this.context.startActivity(intent);
     }
 
+    @Override //TODO: refactor
+    public void onImageAvailable(ImageReader reader) {
+
+    }
 }

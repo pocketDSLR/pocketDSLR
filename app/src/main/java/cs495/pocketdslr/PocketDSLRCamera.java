@@ -3,6 +3,7 @@ package cs495.pocketdslr;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.PointF;
@@ -12,6 +13,7 @@ import android.graphics.SurfaceTexture;
 import android.graphics.drawable.GradientDrawable;
 import android.hardware.camera2.*;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.ImageReader;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
@@ -26,11 +28,14 @@ import java.util.List;
 /**
  * Created by Chris on 3/11/2015.
  */
-public class PocketDSLRCamera implements CameraStateCallback, CameraCaptureSessionCallback, TextureView.SurfaceTextureListener{
+public class PocketDSLRCamera implements
+        CameraStateCallback,
+        CameraCaptureSessionStateCallback,
+        TextureView.SurfaceTextureListener,
+        CameraCaptureSessionCallback {
 
     protected Context context;
     protected Activity activity;
-    protected PocketDSLRCameraCallback cameraCallback;
     protected CameraManager cameraManager;
     protected CameraDevice cameraDevice;
     protected CameraCharacteristics cameraCharacteristics;
@@ -39,11 +44,12 @@ public class PocketDSLRCamera implements CameraStateCallback, CameraCaptureSessi
     protected TextureView cameraPreview;
     protected CaptureRequest.Builder cameraCaptureRequestBuilder;
     protected CameraCaptureSession cameraCaptureSession;
+    protected ImageReader.OnImageAvailableListener imageAvailableListener;
 
-    public PocketDSLRCamera(Activity activity, PocketDSLRCameraCallback cameraCallback, TextureView cameraPreview) {
+    public PocketDSLRCamera(Activity activity, ImageReader.OnImageAvailableListener imageAvailableListener, TextureView cameraPreview) {
         this.activity = activity;
         this.context = this.activity.getBaseContext();
-        this.cameraCallback = cameraCallback;
+        this.imageAvailableListener = imageAvailableListener;
         this.cameraManager = (CameraManager)this.context.getSystemService(Context.CAMERA_SERVICE);
         this.cameraPreview = cameraPreview;
     }
@@ -121,6 +127,7 @@ public class PocketDSLRCamera implements CameraStateCallback, CameraCaptureSessi
     }
 
     public void onReadyState() {
+
         this.openCamera();
     }
 
@@ -145,13 +152,14 @@ public class PocketDSLRCamera implements CameraStateCallback, CameraCaptureSessi
             List<Surface> previewSurfaces = new LinkedList<>();
             previewSurfaces.add(previewSurface);
 
-            CameraCaptureSessionCallbackBridge cameraCaptureSessionCallbackBridge = new CameraCaptureSessionCallbackBridge(this);
+            CameraCaptureSessionStateCallbackBridge cameraCaptureSessionCallbackBridge = new CameraCaptureSessionStateCallbackBridge(this);
 
             this.cameraDevice.createCaptureSession(previewSurfaces, cameraCaptureSessionCallbackBridge, null);
 
-            this.cameraCallback.onCameraReady(this);
+            //this.cameraCallback.onCameraReady(this);
         }
         catch (CameraAccessException e) {
+
             Log.println(0, "pocketDSLR", e.getMessage());
         }
     }
@@ -159,9 +167,13 @@ public class PocketDSLRCamera implements CameraStateCallback, CameraCaptureSessi
     protected void openCamera() {
 
         try {
+
             this.cameraId = this.cameraManager.getCameraIdList()[0];
+
             this.cameraCharacteristics = this.cameraManager.getCameraCharacteristics(this.cameraId);
+
             StreamConfigurationMap config = this.cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+
             this.cameraSize = config.getOutputSizes(SurfaceTexture.class)[0];
 
             //this.applyTransform(this.cameraSize.getWidth(), this.cameraSize.getHeight());
@@ -183,7 +195,7 @@ public class PocketDSLRCamera implements CameraStateCallback, CameraCaptureSessi
         if (this.cameraDevice == cameraDevice)
         {
             this.cameraDevice = null;
-            this.cameraCallback.onCameraDestroy(this);
+            //this.cameraCallback.onCameraDestroy(this);
         }
     }
 
@@ -234,6 +246,44 @@ public class PocketDSLRCamera implements CameraStateCallback, CameraCaptureSessi
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+
+    }
+
+    //TODO
+    public void takePicture() throws CameraAccessException {
+
+        ImageReader imageReader = ImageReader.newInstance(this.cameraSize.getWidth(), this.cameraSize.getHeight(), ImageFormat.JPEG, 1);
+
+        List<Surface> renderSurfaces = new LinkedList<Surface>();
+
+        renderSurfaces.add(imageReader.getSurface());
+        renderSurfaces.add(new Surface(this.cameraPreview.getSurfaceTexture()));
+
+        CaptureRequest.Builder captureRequestBuilder = this.cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+
+        captureRequestBuilder.addTarget(imageReader.getSurface());
+
+        captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO);
+
+        int surfaceOrientation = this.activity.getWindowManager().getDefaultDisplay().getRotation();
+
+        captureRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION, surfaceOrientation);
+
+        HandlerThread handlerThread = new HandlerThread("TakePicture");
+
+        handlerThread.start();
+
+        Handler threadHandler = new Handler(handlerThread.getLooper());
+
+        imageReader.setOnImageAvailableListener(this.imageAvailableListener, threadHandler);
+
+        CameraCaptureSessionCallbackBridge cameraCaptureSessionCallbackBridge = new CameraCaptureSessionCallbackBridge(this);
+
+        //this.cameraDevice.createCaptureSession(renderSurfaces,
+    }
+
+    @Override
+    public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
 
     }
 }

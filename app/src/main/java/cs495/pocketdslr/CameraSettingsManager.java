@@ -2,6 +2,7 @@ package cs495.pocketdslr;
 
 import android.app.Activity;
 import android.content.Context;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
@@ -30,9 +31,6 @@ public class CameraSettingsManager implements CameraSettingListener, SeekBar.OnS
         CameraSettingButton buttonApertureSize = (CameraSettingButton)this.activity.findViewById(R.id.buttonApertureSize);
         CameraSettingButton buttonExposureTime = (CameraSettingButton)this.activity.findViewById(R.id.buttonExposureTime);
 
-        ImageButton buttonLeft = (ImageButton)this.activity.findViewById(R.id.buttonChevronLeft);
-        ImageButton buttonRight = (ImageButton)this.activity.findViewById(R.id.buttonChevronRight);
-
         this.settingSeekBar = (SeekBar)this.activity.findViewById(R.id.seekBar);
 
         buttonISO.registerManualCameraSettings(manualCameraSettings);
@@ -46,6 +44,33 @@ public class CameraSettingsManager implements CameraSettingListener, SeekBar.OnS
         this.activeCameraSettingButton = buttonISO;
         this.settingSeekBar.setOnSeekBarChangeListener(this);
         this.onProgressChanged(this.settingSeekBar, 0, false);
+
+        ImageButton buttonLeft = (ImageButton)this.activity.findViewById(R.id.buttonChevronLeft);
+        ImageButton buttonRight = (ImageButton)this.activity.findViewById(R.id.buttonChevronRight);
+
+        buttonLeft.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                int progress = settingSeekBar.getProgress();
+
+                if (progress > 0) {
+                    settingSeekBar.setProgress(progress - 1);
+                }
+            }
+        });
+
+        buttonRight.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                int progress = settingSeekBar.getProgress();
+
+                if (progress < 100) {
+                    settingSeekBar.setProgress(progress + 1);
+                }
+            }
+        });
     }
 
     public void onSettingChange(CameraSettingButton cameraSettingButton) {
@@ -55,7 +80,6 @@ public class CameraSettingsManager implements CameraSettingListener, SeekBar.OnS
         int settingValue = this.activeCameraSettingButton.getCameraSetting();
 
         this.settingSeekBar.setProgress(settingValue);
-        this.settingSeekBar.setThumbOffset(settingValue);
     }
 
     @Override

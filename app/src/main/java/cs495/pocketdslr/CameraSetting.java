@@ -52,7 +52,7 @@ public class CameraSetting {
 
             Pair<Integer, String> settingValue = this.getPossibleValueAt(i);
 
-            if (settingValue.first.equals(value)){
+            if (settingValue.first.equals(value)) {
 
                 return settingValue;
             }
@@ -105,14 +105,14 @@ public class CameraSetting {
 
         Object[] possibleValues = new Object[8];
 
-        possibleValues[0] = new Pair<Integer, String>(2, "f 1.4");
+        possibleValues[0] = new Pair<Integer, String>(1, "f 1.4");
         possibleValues[1] = new Pair<Integer, String>(2, "f 2");
-        possibleValues[2] = new Pair<Integer, String>(2, "f 2.8");
-        possibleValues[3] = new Pair<Integer, String>(2, "f 4");
-        possibleValues[4] = new Pair<Integer, String>(2, "f 5.6");
-        possibleValues[5] = new Pair<Integer, String>(2, "f 8");
-        possibleValues[6] = new Pair<Integer, String>(2, "f 11");
-        possibleValues[7] = new Pair<Integer, String>(2, "f 16");
+        possibleValues[2] = new Pair<Integer, String>(3, "f 2.8");
+        possibleValues[3] = new Pair<Integer, String>(4, "f 4");
+        possibleValues[4] = new Pair<Integer, String>(5, "f 5.6");
+        possibleValues[5] = new Pair<Integer, String>(8, "f 8");
+        possibleValues[6] = new Pair<Integer, String>(11, "f 11");
+        possibleValues[7] = new Pair<Integer, String>(16, "f 16");
 
         return new CameraSetting(ManualCameraSettings.APERTURE_SIZE, possibleValues);
     }

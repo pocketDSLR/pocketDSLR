@@ -24,8 +24,8 @@ public class PocketDSLRContext implements PocketDSLRCameraCallback {
 
     public PocketDSLRContext(Activity activity, TextureView cameraPreview) {
 
-        this.camera = new PocketDSLRCamera(activity, this, cameraPreview);
         this.user = new UserContext(activity);
+        this.camera = new PocketDSLRCamera(activity, this.user, cameraPreview);
         this.cameraSettingsManager = new CameraSettingsManager(activity, this.user.getCameraSettings());
 
         cameraPreview.setSurfaceTextureListener(this.camera);

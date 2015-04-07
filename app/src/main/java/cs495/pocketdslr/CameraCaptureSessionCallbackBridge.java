@@ -1,28 +1,25 @@
 package cs495.pocketdslr;
 
 import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.TotalCaptureResult;
 
 /**
- * Created by Chris on 3/11/2015.
+ * Created by Chris on 4/7/2015.
  */
-public class CameraCaptureSessionCallbackBridge extends CameraCaptureSession.StateCallback {
+public class CameraCaptureSessionCallbackBridge extends CameraCaptureSession.CaptureCallback {
 
-    private CameraCaptureSessionCallback callback;
+    private CameraCaptureSessionCallback cameraCaptureSessionCallback;
 
-    public CameraCaptureSessionCallbackBridge(CameraCaptureSessionCallback callback)
-    {
-        this.callback = callback;
+    public CameraCaptureSessionCallbackBridge(CameraCaptureSessionCallback cameraCaptureSessionCallback) {
+
+        this.cameraCaptureSessionCallback = cameraCaptureSessionCallback;
     }
 
     @Override
-    public void onConfigured(CameraCaptureSession session) {
+    public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
+        super.onCaptureCompleted(session, request, result);
 
-        this.callback.onConfigured(session);
-    }
-
-    @Override
-    public void onConfigureFailed(CameraCaptureSession session) {
-
-        this.callback.onConfigureFailed(session);
+        this.cameraCaptureSessionCallback.onCaptureCompleted(session, request, result);
     }
 }

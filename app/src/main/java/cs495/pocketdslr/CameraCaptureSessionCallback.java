@@ -1,11 +1,13 @@
 package cs495.pocketdslr;
 
 import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.TotalCaptureResult;
 
 /**
- * Created by Chris on 3/11/2015.
+ * Created by Chris on 4/7/2015.
  */
 public interface CameraCaptureSessionCallback {
-    abstract void onConfigureFailed(CameraCaptureSession session);
-    abstract void onConfigured(CameraCaptureSession session);
+
+    void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result);
 }
