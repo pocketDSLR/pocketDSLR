@@ -16,6 +16,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -63,7 +64,9 @@ public class UserContext {
         final String imageFileName = simpleDateFormatter.format(currentDate) + randomGenerator.nextInt(1000) + ".dng";
 
         File imageFile = new File(appDirectory, imageFileName);
+
         Log.v("pocketDSLR!!~~", imageFile.toString());
+
         try {
             FileOutputStream imageFileStream = new FileOutputStream(imageFile);
 
@@ -71,18 +74,10 @@ public class UserContext {
 
             dngImageCreator.writeImage(imageFileStream, imageReader.acquireNextImage());
 
-            AlertDialog.Builder previewPromptDialog = new AlertDialog.Builder(context);
+            dngImageCreator.close();
 
-            previewPromptDialog.setMessage("View Image?");
-
-            previewPromptDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    viewImage(imageFileName);
-                }
-            });
-
-            previewPromptDialog.setNegativeButton("No", null);
+            imageFileStream.flush();
+            imageFileStream.close();
 
 
         } catch (FileNotFoundException e) {

@@ -72,18 +72,18 @@
         android:layout_height="wrap_content"
         android:id="@+id/buttonCamera"
         android:clickable="false"
-        android:src="@drawable/camera"
-        android:background="@android:color/transparent"
+        android:background="@drawable/camera_active_selector"
         android:layout_alignParentBottom="true"
         android:layout_alignStart="@+id/buttonChevronRight"
-        android:layout_alignTop="@+id/buttonExposureTime" />
+        android:layout_alignTop="@+id/buttonExposureTime"
+        android:layout_marginTop="23dp"
+        android:layout_marginBottom="23dp" />
 
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/buttonChevronRight"
-        android:src="@drawable/chevron_thin_down"
-        android:background="@android:color/transparent"
+        android:background="@drawable/chevron_down_active_selector"
         android:layout_above="@+id/buttonCamera"
         android:layout_alignStart="@+id/seekBar"
         android:layout_marginBottom="46dp"
@@ -93,8 +93,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/buttonChevronLeft"
-        android:src="@drawable/chevron_thin_up"
-        android:background="@android:color/transparent"
+        android:background="@drawable/chevron_up_active_selector"
         android:layout_alignParentTop="true"
         android:layout_alignStart="@+id/seekBar"
         android:layout_alignEnd="@+id/seekBar" />

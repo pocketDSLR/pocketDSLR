@@ -22,6 +22,7 @@ import android.os.HandlerThread;
 import android.util.Log;
 import android.util.Range;
 import android.util.Size;
+import android.view.Gravity;
 import android.view.Surface;
 import android.view.TextureView;
 import android.widget.Toast;
@@ -270,7 +271,6 @@ public class PocketDSLRCamera implements
 
         this.cameraPreview.setTransform(transformMatrix);
     }
-
 
     public void takePicture() throws CameraAccessException {
 

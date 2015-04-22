@@ -2,6 +2,7 @@ package cs495.pocketdslr;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
@@ -61,6 +62,7 @@ public class CameraSettingsManager implements CameraSettingListener, SeekBar.OnS
         this.activeCameraSettingButton = buttonISO;
         this.settingSeekBar.setOnSeekBarChangeListener(this);
         this.onProgressChanged(this.settingSeekBar, 0, false);
+        this.activeCameraSettingButton.setTextColor(Color.parseColor("#56FFF9"));
 
         //Setup detailed seekbar movement with the left and right chevron buttons.
         ImageButton buttonLeft = (ImageButton)this.activity.findViewById(R.id.buttonChevronLeft);
@@ -107,7 +109,13 @@ public class CameraSettingsManager implements CameraSettingListener, SeekBar.OnS
     //Setups up the seekbar with the correct value for that setting
     public void onSettingChange(CameraSettingButton cameraSettingButton) {
 
+        //Set old active button to default color
+        this.activeCameraSettingButton.setTextColor(Color.parseColor("#8CD0CA"));
+
         this.activeCameraSettingButton = cameraSettingButton;
+
+        //Set new active button to active color
+        this.activeCameraSettingButton.setTextColor(Color.parseColor("#56FFF9"));
 
         int settingValue = this.activeCameraSettingButton.getCameraSetting();
 
