@@ -22,7 +22,7 @@ import java.util.List;
  */
 public class CameraSettingsManager implements CameraSettingListener, SeekBar.OnSeekBarChangeListener
 {
-    protected SeekBar settingSeekBar;
+    protected VerticalSeekBar settingSeekBar;
     protected Activity activity;
     protected CameraSettingButton activeCameraSettingButton;
     protected PocketDSLRCamera pocketDSLRCamera;
@@ -43,7 +43,7 @@ public class CameraSettingsManager implements CameraSettingListener, SeekBar.OnS
         CameraSettingButton buttonApertureSize = (CameraSettingButton)this.activity.findViewById(R.id.buttonApertureSize);
         CameraSettingButton buttonExposureTime = (CameraSettingButton)this.activity.findViewById(R.id.buttonExposureTime);
 
-        this.settingSeekBar = (SeekBar)this.activity.findViewById(R.id.seekBar);
+        this.settingSeekBar = (VerticalSeekBar)this.activity.findViewById(R.id.seekBar);
 
         //Register the manual camera settings with the buttons so they can initialize to stored
         //values and also save further changes to the app state
@@ -73,6 +73,7 @@ public class CameraSettingsManager implements CameraSettingListener, SeekBar.OnS
 
                 if (progress > 0) {
                     settingSeekBar.setProgress(progress - 1);
+                    settingSeekBar.updateThumb();
                 }
             }
         });
@@ -84,6 +85,7 @@ public class CameraSettingsManager implements CameraSettingListener, SeekBar.OnS
 
                 if (progress < 100) {
                     settingSeekBar.setProgress(progress + 1);
+                    settingSeekBar.updateThumb();
                 }
             }
         });
@@ -110,9 +112,10 @@ public class CameraSettingsManager implements CameraSettingListener, SeekBar.OnS
         int settingValue = this.activeCameraSettingButton.getCameraSetting();
 
         this.settingSeekBar.setProgress(settingValue);
+        this.settingSeekBar.updateThumb();
     }
 
-    //Occurs when the seekbar is change.
+    //Occurs when the seekbar is changed.
     //This changes the setting corresponding to the currently active setting button.
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {

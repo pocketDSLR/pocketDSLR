@@ -15,6 +15,7 @@ import android.media.ImageReader;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -47,7 +48,7 @@ public class UserContext {
 
     public void saveImage(CameraCharacteristics cameraCharacteristics, TotalCaptureResult totalCaptureResult, ImageReader imageReader) {
 
-        File appDirectory = new File(Environment.getExternalStorageDirectory() + "/pocketDSLR/");
+        File appDirectory = new File(Environment.getExternalStorageDirectory()+ "/pocketDSLR/");
 
         if (!appDirectory.exists()){
             appDirectory.mkdir();
@@ -62,7 +63,7 @@ public class UserContext {
         final String imageFileName = simpleDateFormatter.format(currentDate) + randomGenerator.nextInt(1000) + ".dng";
 
         File imageFile = new File(appDirectory, imageFileName);
-
+        Log.v("pocketDSLR!!~~", imageFile.toString());
         try {
             FileOutputStream imageFileStream = new FileOutputStream(imageFile);
 

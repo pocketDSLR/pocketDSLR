@@ -356,44 +356,55 @@ public class PocketDSLRCamera implements
     @Override
     public void onImageAvailable(ImageReader reader) {
 
-//        DngSaver dngSaver = new DngSaver(userContext, reader, cameraCharacteristics, resultRaw);
+        DngSaver dngSaver = new DngSaver(userContext, reader, cameraCharacteristics, resultRaw);
+
+        Thread thread = new Thread(dngSaver);
+
+        thread.start();
+
+//        File appDirectory = new File(Environment.getExternalStorageDirectory() + "/pocketDSLR/");
 //
-//        Thread thread = new Thread(dngSaver);
+//        if (!appDirectory.exists()){
+//            appDirectory.mkdirs();
+//        }
 //
-//        thread.start();
+//        SimpleDateFormat simpleDateFormatter = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_");
+//
+//        Date currentDate = new Date();
+//
+//        Random randomGenerator = new Random();
+//
+//        final String imageFileName = appDirectory.toString() + simpleDateFormatter.format(currentDate) + randomGenerator.nextInt(1000) + ".dng";
+//
+//        File imageFile = new File(imageFileName);
+//
+//        FileOutputStream imageFileStream = null;
+//        try {
+//            imageFileStream = new FileOutputStream(imageFile);
+//            imageFileStream.write((byte)1);
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        DngCreator dngImageCreator = new DngCreator(cameraCharacteristics, resultRaw);
+//
+//        try {
+//            dngImageCreator.writeImage(imageFileStream, reader.acquireNextImage());
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        try {
+//            imageFileStream.flush();
+//            imageFileStream.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        dngImageCreator.close();
 
-        File appDirectory = new File(Environment.getExternalStorageDirectory() + "/pocketDSLR/");
-
-        if (!appDirectory.exists()){
-            appDirectory.mkdir();
-        }
-
-        SimpleDateFormat simpleDateFormatter = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_");
-
-        Date currentDate = new Date();
-
-        Random randomGenerator = new Random();
-
-        final String imageFileName = simpleDateFormatter.format(currentDate) + randomGenerator.nextInt(1000) + ".dng";
-
-        File imageFile = new File(appDirectory, imageFileName);
-
-        FileOutputStream imageFileStream = null;
-        try {
-            imageFileStream = new FileOutputStream(imageFile);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        DngCreator dngImageCreator = new DngCreator(cameraCharacteristics, resultRaw);
-
-        try {
-            dngImageCreator.writeImage(imageFileStream, reader.acquireNextImage());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        this.openCamera();
+        this.setupCameraPreview();
     }
 
     @Override
