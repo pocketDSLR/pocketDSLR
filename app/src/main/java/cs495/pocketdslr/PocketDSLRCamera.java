@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -13,17 +14,27 @@ import android.graphics.SurfaceTexture;
 import android.graphics.drawable.GradientDrawable;
 import android.hardware.camera2.*;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.Image;
 import android.media.ImageReader;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
+import android.util.Range;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by Chris on 3/11/2015.
@@ -31,8 +42,10 @@ import java.util.List;
 public class PocketDSLRCamera implements
         CameraStateCallback,
         CameraCaptureSessionStateCallback,
-        TextureView.SurfaceTextureListener,
-        CameraCaptureSessionCallback {
+        //TextureView.SurfaceTextureListener,
+        CameraSettingChange,
+        CameraCaptureSessionCallback,
+        ImageReader.OnImageAvailableListener{
 
     protected Context context;
     protected Activity activity;
@@ -41,15 +54,19 @@ public class PocketDSLRCamera implements
     protected CameraCharacteristics cameraCharacteristics;
     protected String cameraId;
     protected Size cameraSize;
+    protected Size rawCameraSize;
+    protected long minOutputFrameDuration;
     protected TextureView cameraPreview;
     protected CaptureRequest.Builder cameraCaptureRequestBuilder;
     protected CameraCaptureSession cameraCaptureSession;
-    protected ImageReader.OnImageAvailableListener imageAvailableListener;
+    protected UserContext userContext;
+    protected Handler cameraPreviewHandler;
+    protected Surface previewSurface;
 
-    public PocketDSLRCamera(Activity activity, ImageReader.OnImageAvailableListener imageAvailableListener, TextureView cameraPreview) {
+    public PocketDSLRCamera(Activity activity, UserContext userContext, TextureView cameraPreview) {
         this.activity = activity;
         this.context = this.activity.getBaseContext();
-        this.imageAvailableListener = imageAvailableListener;
+        this.userContext = userContext;
         this.cameraManager = (CameraManager)this.context.getSystemService(Context.CAMERA_SERVICE);
         this.cameraPreview = cameraPreview;
     }
@@ -64,23 +81,33 @@ public class PocketDSLRCamera implements
 
         this.cameraCaptureSession = session;
 
-        if (this.cameraDevice == null || this.cameraCaptureRequestBuilder == null) {
+        if (this.cameraDevice == null) {
             return;
         }
 
         try {
 
-            this.cameraCaptureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO);
+            SurfaceTexture surfaceTexture = this.cameraPreview.getSurfaceTexture();
+
+            surfaceTexture.setDefaultBufferSize(this.cameraSize.getWidth(), this.cameraSize.getHeight());
+
+            this.previewSurface = new Surface(surfaceTexture);
+
+            this.cameraCaptureRequestBuilder  = this.cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+
+            this.cameraCaptureRequestBuilder.addTarget(this.previewSurface);
+
+            this.updateSettings(this.cameraCaptureRequestBuilder);
 
             HandlerThread cameraPreviewThread = new HandlerThread("cameraPreview");
 
             cameraPreviewThread.start();
 
-            Handler cameraPreviewHandler = new Handler(cameraPreviewThread.getLooper());
+            this.cameraPreviewHandler = new Handler(cameraPreviewThread.getLooper());
 
             CaptureRequest captureRequest = this.cameraCaptureRequestBuilder.build();
 
-            this.cameraCaptureSession.setRepeatingRequest(captureRequest, null, cameraPreviewHandler);
+            this.cameraCaptureSession.setRepeatingRequest(captureRequest, null, this.cameraPreviewHandler);
         }
         catch(CameraAccessException e) {
             Log.w("pocketDSLR", e.getMessage(), e);
@@ -133,30 +160,24 @@ public class PocketDSLRCamera implements
 
     protected void setupCameraPreview() {
 
-        try {
-//            Matrix transform = this.cameraPreview.getTransform(null);
-//
-//            transform.setRotate(90);
-//
-//            this.cameraPreview.setTransform(transform);
+        if (this.cameraPreview == null || this.cameraSize == null || this.cameraDevice == null){
+            return;
+        }
 
+        try {
             SurfaceTexture surfaceTexture = this.cameraPreview.getSurfaceTexture();
 
             surfaceTexture.setDefaultBufferSize(this.cameraSize.getWidth(), this.cameraSize.getHeight());
 
             Surface previewSurface = new Surface(surfaceTexture);
 
-            this.cameraCaptureRequestBuilder = this.cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-            this.cameraCaptureRequestBuilder.addTarget(previewSurface);
-
             List<Surface> previewSurfaces = new LinkedList<>();
+
             previewSurfaces.add(previewSurface);
 
             CameraCaptureSessionStateCallbackBridge cameraCaptureSessionCallbackBridge = new CameraCaptureSessionStateCallbackBridge(this);
 
             this.cameraDevice.createCaptureSession(previewSurfaces, cameraCaptureSessionCallbackBridge, null);
-
-            //this.cameraCallback.onCameraReady(this);
         }
         catch (CameraAccessException e) {
 
@@ -176,9 +197,11 @@ public class PocketDSLRCamera implements
 
             this.cameraSize = config.getOutputSizes(SurfaceTexture.class)[0];
 
+            this.rawCameraSize = config.getOutputSizes(ImageFormat.RAW_SENSOR)[0];
+
+            this.minOutputFrameDuration = config.getOutputMinFrameDuration(ImageFormat.RAW_SENSOR, this.rawCameraSize);
+
             //this.applyTransform(this.cameraSize.getWidth(), this.cameraSize.getHeight());
-
-
 
             CameraStateCallbackBridge cameraStateCallbackBridge = new CameraStateCallbackBridge(this);
 
@@ -195,12 +218,35 @@ public class PocketDSLRCamera implements
         if (this.cameraDevice == cameraDevice)
         {
             this.cameraDevice = null;
-            //this.cameraCallback.onCameraDestroy(this);
         }
     }
 
-    protected CaptureRequest buildCaptureRequest(Surface renderSurface, ManualCameraSettings manualSettings) {
-        return null;
+    protected void updateSettings(CaptureRequest.Builder builder) {
+
+        //builder.set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_OFF);
+        builder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+        builder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_MODE_OFF);
+        builder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_MODE_OFF);
+
+        Integer isoSetting = this.userContext.getCameraSettings().getISO();
+
+        if (isoSetting != null) {
+            builder.set(CaptureRequest.SENSOR_SENSITIVITY, isoSetting);
+        }
+
+        Long exposureSetting = this.userContext.getCameraSettings().getExposureTime();
+
+        if (exposureSetting != null) {
+            builder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, exposureSetting);
+        }
+
+        Float apertureSetting = this.userContext.getCameraSettings().getAperture();
+
+        if (apertureSetting != null) {
+            builder.set(CaptureRequest.LENS_FOCUS_DISTANCE, apertureSetting);
+        }
+
+        builder.set(CaptureRequest.SENSOR_FRAME_DURATION, this.minOutputFrameDuration);
     }
 
     private void applyTransform() {
@@ -225,65 +271,148 @@ public class PocketDSLRCamera implements
         this.cameraPreview.setTransform(transformMatrix);
     }
 
-    @Override
-    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
 
-        this.openCamera();
-        //this.applyTransform();
-    }
-
-    @Override
-    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-
-        this.openCamera();
-        //this.applyTransform();
-    }
-
-    @Override
-    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        return false;
-    }
-
-    @Override
-    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-
-    }
-
-    //TODO
     public void takePicture() throws CameraAccessException {
 
-        ImageReader imageReader = ImageReader.newInstance(this.cameraSize.getWidth(), this.cameraSize.getHeight(), ImageFormat.JPEG, 1);
+        final ImageReader imageReader = ImageReader.newInstance(this.rawCameraSize.getWidth(), this.rawCameraSize.getHeight(), ImageFormat.RAW_SENSOR, 1);
 
         List<Surface> renderSurfaces = new LinkedList<Surface>();
 
         renderSurfaces.add(imageReader.getSurface());
-        renderSurfaces.add(new Surface(this.cameraPreview.getSurfaceTexture()));
+        renderSurfaces.add(this.previewSurface);
 
-        CaptureRequest.Builder captureRequestBuilder = this.cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+        final CaptureRequest.Builder captureRequestBuilder = this.cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+
+        captureRequestBuilder.set(CaptureRequest.STATISTICS_LENS_SHADING_MAP_MODE, CaptureRequest.STATISTICS_LENS_SHADING_MAP_MODE_ON);
+
+        Range<Integer> availableFpsRanges[] = this.cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
+
+        Range<Integer> targetFps = availableFpsRanges[availableFpsRanges.length - 1];
+
+        captureRequestBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, targetFps);
 
         captureRequestBuilder.addTarget(imageReader.getSurface());
 
-        captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO);
-
         int surfaceOrientation = this.activity.getWindowManager().getDefaultDisplay().getRotation();
 
+        switch (surfaceOrientation) {
+            case Surface.ROTATION_0:
+                surfaceOrientation = 90;
+                break;
+            case Surface.ROTATION_90:
+                surfaceOrientation = 0;
+                break;
+            case Surface.ROTATION_180:
+                surfaceOrientation = 270;
+                break;
+            case Surface.ROTATION_270:
+                surfaceOrientation = 180;
+                break;
+        }
+
         captureRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION, surfaceOrientation);
+
+        this.updateSettings(captureRequestBuilder);
 
         HandlerThread handlerThread = new HandlerThread("TakePicture");
 
         handlerThread.start();
 
-        Handler threadHandler = new Handler(handlerThread.getLooper());
+        final Handler threadHandler = new Handler(handlerThread.getLooper());
 
-        imageReader.setOnImageAvailableListener(this.imageAvailableListener, threadHandler);
+        imageReader.setOnImageAvailableListener(this, threadHandler);
 
-        CameraCaptureSessionCallbackBridge cameraCaptureSessionCallbackBridge = new CameraCaptureSessionCallbackBridge(this);
+        //CameraCaptureSessionStateCallbackBridge cameraCaptureSessionStateCallbackBridge = new CameraCaptureSessionStateCallbackBridge(this);
 
-        //this.cameraDevice.createCaptureSession(renderSurfaces,
+        this.cameraDevice.createCaptureSession(renderSurfaces, new CameraCaptureSession.StateCallback() {
+            @Override
+            public void onConfigured(CameraCaptureSession session) {
+
+                try {
+
+                    session.capture(captureRequestBuilder.build(), new CameraCaptureSession.CaptureCallback() {
+                        @Override
+                        public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
+                            super.onCaptureCompleted(session, request, result);
+
+                            resultRaw = result;
+
+
+                        }
+                    }, threadHandler);
+                } catch (CameraAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onConfigureFailed(CameraCaptureSession session) {
+
+            }
+        }, threadHandler);
+    }
+
+    TotalCaptureResult resultRaw;
+    @Override
+    public void onImageAvailable(ImageReader reader) {
+
+//        DngSaver dngSaver = new DngSaver(userContext, reader, cameraCharacteristics, resultRaw);
+//
+//        Thread thread = new Thread(dngSaver);
+//
+//        thread.start();
+
+        File appDirectory = new File(Environment.getExternalStorageDirectory() + "/pocketDSLR/");
+
+        if (!appDirectory.exists()){
+            appDirectory.mkdir();
+        }
+
+        SimpleDateFormat simpleDateFormatter = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_");
+
+        Date currentDate = new Date();
+
+        Random randomGenerator = new Random();
+
+        final String imageFileName = simpleDateFormatter.format(currentDate) + randomGenerator.nextInt(1000) + ".dng";
+
+        File imageFile = new File(appDirectory, imageFileName);
+
+        FileOutputStream imageFileStream = null;
+        try {
+            imageFileStream = new FileOutputStream(imageFile);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        DngCreator dngImageCreator = new DngCreator(cameraCharacteristics, resultRaw);
+
+        try {
+            dngImageCreator.writeImage(imageFileStream, reader.acquireNextImage());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        this.openCamera();
     }
 
     @Override
     public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
 
+    }
+
+
+    @Override
+    public void onSettingchange() {
+
+        if (this.cameraCaptureSession == null){
+            return;
+        }
+        try {
+            this.updateSettings(this.cameraCaptureRequestBuilder);
+            this.cameraCaptureSession.setRepeatingRequest(this.cameraCaptureRequestBuilder.build(), null, this.cameraPreviewHandler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
     }
 }

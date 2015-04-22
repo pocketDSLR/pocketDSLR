@@ -1,7 +1,9 @@
 package cs495.pocketdslr;
 
 import android.content.SharedPreferences;
+import android.graphics.Camera;
 import android.os.Bundle;
+import android.util.Pair;
 import android.view.Surface;
 
 import java.util.List;
@@ -22,6 +24,10 @@ public class ManualCameraSettings {
     protected SharedPreferences sharedPreferences;
     protected SharedPreferences.Editor editor;
 
+    protected CameraSetting isoSetting;
+    protected CameraSetting exposureSetting;
+    protected CameraSetting apertureSetting;
+
     public ManualCameraSettings(SharedPreferences sharedPreferences){
         this.sharedPreferences = sharedPreferences;
         this.editor = this.sharedPreferences.edit();
@@ -33,55 +39,63 @@ public class ManualCameraSettings {
     }
 
     public int getKey(String settingKey) {
+
         return this.sharedPreferences.getInt(settingKey, 0);
     }
 
-    public void setShutterSpeed(int shutterSpeed) {
-        this.setKey(SHUTTER_SPEED, shutterSpeed);
+    public Integer getISO() {
+
+        if (this.isoSetting == null) {
+            return null;
+        }
+
+        int storedValue = this.getKey(ISO);
+
+        Pair<Integer, String> settingValue = this.isoSetting.getSettingValue(storedValue);
+
+        return settingValue.first;
     }
 
-    public int getShutterSpeed() {
-        return this.getKey(SHUTTER_SPEED);
+    public Float getAperture() {
+
+        if (this.apertureSetting == null) {
+            return null;
+        }
+
+        float[] lookup = (float[])this.apertureSetting.lookup;
+
+        int storedValue = this.getKey(APERTURE_SIZE);
+
+        Pair<Integer, String> settingValue = this.apertureSetting.getSettingValue(storedValue);
+
+        return lookup[settingValue.first];
     }
 
-    public void setISO(int iso) {
-        this.setKey(ISO, iso);
+    public Long getExposureTime(){
+
+        if (this.exposureSetting == null) {
+            return null;
+        }
+
+        int storedValue = this.getKey(EXPOSURE_TIME);
+
+        Pair<Integer, String> settingValue = this.exposureSetting.getSettingValue(storedValue);
+
+        return (long)settingValue.first * (long)1000000;
     }
 
-    public int getISO() {
-        return this.getKey(ISO);
-    }
+    public void registerSetting(String settingKey, CameraSetting cameraSetting) {
 
-    public void setAperture(int apertureSize) {
-        this.setKey(APERTURE_SIZE, apertureSize);
+        switch (settingKey) {
+            case ISO:
+                this.isoSetting = cameraSetting;
+                break;
+            case EXPOSURE_TIME:
+                this.exposureSetting = cameraSetting;
+                break;
+            case APERTURE_SIZE:
+                this.apertureSetting = cameraSetting;
+                break;
+        }
     }
-
-    public int getAperture() {
-        return this.getKey(APERTURE_SIZE);
-    }
-
-    public void setWhiteBalance(int whiteBalance) {
-        this.setKey(WHITE_BALANCE, whiteBalance);
-    }
-
-    public int getWhiteBalance(){
-        return this.getKey(WHITE_BALANCE);
-    }
-
-    public void setImageQuality(int imageQuality) {
-        this.setKey(IMAGE_QUALITY, imageQuality);
-    }
-
-    public int getImageQuality(){
-        return this.getKey(IMAGE_QUALITY);
-    }
-
-    public void setExposureTime(int exposureTime){
-        this.setKey(EXPOSURE_TIME, exposureTime);
-    }
-
-    public int getExposureTime(){
-        return this.getKey(EXPOSURE_TIME);
-    }
-
 }

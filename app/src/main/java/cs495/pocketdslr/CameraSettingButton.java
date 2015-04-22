@@ -2,6 +2,7 @@ package cs495.pocketdslr;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.hardware.camera2.CameraCharacteristics;
 import android.util.AttributeSet;
 import android.util.Pair;
 import android.view.View;
@@ -56,9 +57,13 @@ public class CameraSettingButton extends RotatableButton implements View.OnClick
         }
     }
 
-    public void registerManualCameraSettings(ManualCameraSettings manualCameraSettings) {
+    public void registerManualCameraSettings(ManualCameraSettings manualCameraSettings, CameraCharacteristics cameraCharacteristics) {
 
         this.manualCameraSettings = manualCameraSettings;
+
+        this.manualCameraSettings.registerSetting(this.cameraSetting.getSettingKey(), this.cameraSetting);
+
+        this.cameraSetting.setRange(cameraCharacteristics);
 
         int storedValue = this.manualCameraSettings.getKey(this.cameraSetting.getSettingKey());
 

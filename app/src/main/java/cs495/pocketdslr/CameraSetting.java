@@ -1,8 +1,11 @@
 package cs495.pocketdslr;
 
+import android.hardware.camera2.CameraCharacteristics;
 import android.util.Pair;
+import android.util.Range;
 
 import java.lang.reflect.Array;
+import java.text.DecimalFormat;
 import java.util.ArrayDeque;
 import java.util.List;
 
@@ -12,7 +15,9 @@ import java.util.List;
 public class CameraSetting {
 
     protected String settingKey;
-    Object[] possibleValues;
+    protected Object[] possibleValues;
+
+    public Object lookup;
 
     private CameraSetting(String settingKey, Object[] possibleValues){
         this.settingKey = settingKey;
@@ -61,6 +66,78 @@ public class CameraSetting {
         return this.getPossibleValueAt(0);
     }
 
+    public void setRange(CameraCharacteristics cameraCharacteristics) {
+
+        Object[] possibleValues = new Object[100];
+
+        switch (this.settingKey) {
+            case ManualCameraSettings.EXPOSURE_TIME:
+
+                Range<Long> exposureRange = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
+
+                int lower = (int)(exposureRange.getLower() / (long)1000000) + 1;
+                int upper = (int)(exposureRange.getUpper() / (long)1000000);
+
+                int range = upper - lower;
+
+                int incrementer = (int)(range / 100.0);
+
+                for (int i = 0; i < 100; i++) {
+                    Integer value = i * incrementer + lower;
+                    possibleValues[i] = new Pair<Integer, String>(value, value.toString() + "ms");
+                }
+
+                this.possibleValues = possibleValues;
+
+                break;
+            case ManualCameraSettings.APERTURE_SIZE:
+
+                float availableApertures = cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
+
+                //this.lookup = availableApertures;
+
+                //possibleValues = new Object[availableApertures.length];
+
+                //for (int i = 0; i < availableApertures.length; i++) {
+                //    possibleValues[i] = new Pair<Integer, String>(i, "f " + availableApertures[i]);
+                //}
+
+                float[] preciseFocusDistances = new float[100];
+
+                float incrementerFocus = availableApertures / 100.0f;
+
+                for (int i = 0; i < 100; i++) {
+                    Float distance = i * incrementerFocus;
+                    preciseFocusDistances[i] = distance;
+                    DecimalFormat decimalFormat = new DecimalFormat("##.00");
+                    possibleValues[i] = new Pair<Integer, String>(i, decimalFormat.format(distance));
+                }
+
+                this.lookup = preciseFocusDistances;
+                this.possibleValues = possibleValues;
+
+                break;
+            case ManualCameraSettings.ISO:
+
+                Range<Integer> isoRange = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
+
+                int rangeIso = isoRange.getUpper() - isoRange.getLower();
+
+                int incrementerIso = (int)(rangeIso / 100.0);
+
+                for (int i = 0; i < 99; i++) {
+                    Integer value = isoRange.getLower() + i * incrementerIso;
+                    possibleValues[i] = new Pair<Integer, String>(value, "ISO " + value.toString());
+                }
+
+                possibleValues[99] = new Pair<Integer, String>(isoRange.getUpper(), "ISO " + isoRange.getUpper());
+
+                this.possibleValues = possibleValues;
+
+                break;
+        }
+    }
+
     private Pair<Integer, String> getPossibleValueAt(int index) {
 
         if (index >= this.possibleValues.length) {
@@ -103,16 +180,9 @@ public class CameraSetting {
 
     public static CameraSetting createApertureCameraSetting() {
 
-        Object[] possibleValues = new Object[8];
+        Object[] possibleValues = new Object[1];
 
-        possibleValues[0] = new Pair<Integer, String>(1, "f 1.4");
-        possibleValues[1] = new Pair<Integer, String>(2, "f 2");
-        possibleValues[2] = new Pair<Integer, String>(3, "f 2.8");
-        possibleValues[3] = new Pair<Integer, String>(4, "f 4");
-        possibleValues[4] = new Pair<Integer, String>(5, "f 5.6");
-        possibleValues[5] = new Pair<Integer, String>(8, "f 8");
-        possibleValues[6] = new Pair<Integer, String>(11, "f 11");
-        possibleValues[7] = new Pair<Integer, String>(16, "f 16");
+        possibleValues[0] = new Pair<Integer, String>(1, "14.29");
 
         return new CameraSetting(ManualCameraSettings.APERTURE_SIZE, possibleValues);
     }
